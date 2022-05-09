@@ -1,0 +1,1 @@
+# html-webpack-inject-qs-plugin
