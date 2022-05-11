@@ -1,0 +1,5 @@
+/node_modules/
+/dist/
+/test_dist/
+npm-debug.*.log
+npm-debug.log.*
