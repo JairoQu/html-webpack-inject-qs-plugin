@@ -9,14 +9,14 @@ const schema = {
 };
 
 class HtmlWebpackInjectQsPlugin {
-  constructor(opts) {
+  constructor(opts = {}) {
     validateOptions(schema, opts);
     this.qsObj = opts
   }
 
   alterAssetTags(data) {
     if (data.assetTags) {
-      this.inject.bind(this, data.assetTags.scripts);
+      this.inject(data.assetTags.scripts);
     } else {
       this.inject(data.head);
       this.inject(data.body);
