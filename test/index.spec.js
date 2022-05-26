@@ -74,7 +74,7 @@ const HtmlWebpackPluginOptions = {
 
 function testAutoAssign(err) {
   if (err) {
-      console.error(err)
+    console.error(err)
   }
   expect(!!err).to.be.false;
   const htmlFile = join(OUTPUT_DIR, './index.html');
@@ -82,6 +82,18 @@ function testAutoAssign(err) {
   expect(!!htmlContents, 'Missing HTML contents').to.be.true;
   expect(/href="styles\.css\?v=1\.0\.0&test=abc"/i.test(htmlContents), 'No params appended to styles').to.be.true;
   expect(/src="app\.js\?v=1\.0\.0&test=abc"/i.test(htmlContents), 'No params appended to scripts').to.be.true;
+}
+
+function testEntryfileAssign(err) {
+  if (err) {
+    console.error(err)
+  }
+  expect(!!err).to.be.false;
+  const entryFile = join(OUTPUT_DIR, './app.js');
+  const entryContents = readFileSync(entryFile).toString('utf8');
+  expect(!!entryContents, 'Missing entryfile contents').to.be.true;
+  expect(/"\.js\?v=1\.0\.1&test=def"/i.test(entryContents), 'No params appended to scripts').to.be.true;
+  expect(/"\.css\?v=1\.0\.1&test=def"/i.test(entryContents), 'No params appended to styles').to.be.true;
 }
 
 describe('HtmlWebpackInjectQsPlugin', () => {
@@ -101,6 +113,22 @@ describe('HtmlWebpackInjectQsPlugin', () => {
       ]
     }, (err) => {
       testAutoAssign(err);
+      done(err);
+    });
+  });
+
+  it('should auto append params to lazy chunk', (done) => {
+    webpack({ ...webpackOptions,
+      plugins: [
+        new HtmlWebpackPlugin(HtmlWebpackPluginOptions),
+        new HtmlWebpackInjectQsPlugin({
+          v: '1.0.1',
+          test: 'def'
+        }),
+        new cssPlugin(cssPluginOpts),
+      ]
+    }, (err) => {
+      testEntryfileAssign(err);
       done(err);
     });
   });

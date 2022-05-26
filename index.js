@@ -1,5 +1,6 @@
 const validateOptions = require('schema-utils');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { ReplaceSource } = require('webpack-sources');
 const { stringify } = require('qs');
 
 const PLUGIN_NAME = 'HtmlWebpackInjectQsPlugin';
@@ -11,7 +12,8 @@ const schema = {
 class HtmlWebpackInjectQsPlugin {
   constructor(opts = {}) {
     validateOptions(schema, opts);
-    this.qsObj = opts;
+    // this.qsObj = opts;
+    this.qsStr = '?' + stringify(opts);
   }
 
   alterAssetTags(data) {
@@ -26,14 +28,22 @@ class HtmlWebpackInjectQsPlugin {
   }
 
   inject(scripts = []) {
-    const qsStr = '?' + stringify(this.qsObj);
     scripts.forEach(script => {
       if (script.tagName === 'script') {
-        script.attributes.src += qsStr;
+        script.attributes.src += this.qsStr;
       } else if (script.tagName === 'link') {
-        script.attributes.href += qsStr;
+        script.attributes.href += this.qsStr;
       }
     })
+  }
+
+  injectLazyChunk(source) {
+    const _source = new ReplaceSource(source);
+    const _jsStart = _source.source().indexOf('".js"');
+    const _cssStart = _source.source().indexOf('".css"');
+    _jsStart !== -1 && _source.replace(_jsStart, _jsStart + 4, '".js' + this.qsStr + '"');
+    _cssStart !== -1 && _source.replace(_cssStart, _cssStart + 5, '".css' + this.qsStr + '"');
+    return _source;
   }
 
   apply(compiler) {
@@ -50,6 +60,14 @@ class HtmlWebpackInjectQsPlugin {
       } else {
         // webpack 3.x and earlier
         throw new Error(`${PLUGIN_NAME} can only work with webpack 4.x and later`);
+      }
+    });
+    // afterCompile hook
+    compiler.hooks.afterCompile.tap(PLUGIN_NAME, (compilation) => {
+      for (const asset of Object.keys(compilation.assets)) {
+        if (asset.endsWith('.js') && Object.keys(compilation.options.entry).some(entryName => asset.indexOf(entryName) !== -1)) {
+          compilation.updateAsset(asset, this.injectLazyChunk.bind(this));
+        }
       }
     });
   }
