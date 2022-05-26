@@ -1,6 +1,6 @@
 {
   "name": "html-webpack-inject-qs-plugin",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A plugin that automatically appends query strings to chunks based on html-webpack-plugin",
   "main": "index.js",
   "files": [
